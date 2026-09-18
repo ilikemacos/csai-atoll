@@ -121,6 +121,16 @@ func enabledStandardTabCount() -> Int {
         count += 1
     }
 
+    // LLM Usage tab
+    if Defaults[.enableLLMUsageFeature] {
+        count += 1
+    }
+
+    // cs.AI tab
+    if Defaults[.enableCsAIFeature] {
+        count += 1
+    }
+
     // Notes / Clipboard tab
     if Defaults[.enableNotes] || (Defaults[.enableClipboardManager] && Defaults[.clipboardDisplayMode] == .separateTab) {
         count += 1

@@ -577,6 +577,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             let screenHeight = NSScreen.main?.visibleFrame.height ?? 800
             let maxFraction = Defaults[.terminalMaxHeightFraction]
             baseSize.height = min(screenHeight * maxFraction, max(300, screenHeight * maxFraction))
+        } else if coordinator.currentView == .csAI {
+            baseSize.height = max(baseSize.height, 320)
         }
         
         baseSize = inlineLyricsAdjustedNotchSize(
@@ -918,6 +920,18 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         }.store(in: &cancellables)
 
         Defaults.publisher(.enableScreenAssistant, options: []).sink { [weak self] _ in
+            Task { @MainActor [weak self] in
+                self?.updateFeatureShortcutAvailability()
+            }
+        }.store(in: &cancellables)
+
+        Defaults.publisher(.enableTerminalFeature, options: []).sink { [weak self] _ in
+            Task { @MainActor [weak self] in
+                self?.updateFeatureShortcutAvailability()
+            }
+        }.store(in: &cancellables)
+
+        Defaults.publisher(.enableCsAIFeature, options: []).sink { [weak self] _ in
             Task { @MainActor [weak self] in
                 self?.updateFeatureShortcutAvailability()
             }
@@ -1501,6 +1515,19 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             }
         }
 
+        KeyboardShortcuts.onKeyDown(for: .toggleCsAITab) { [weak self] in
+            guard let self else { return }
+            guard Defaults[.enableShortcuts], Defaults[.enableCsAIFeature] else { return }
+            openCsAITab(focusComposer: true)
+        }
+
+        KeyboardShortcuts.onKeyDown(for: .sendClipboardToCsAI) { [weak self] in
+            guard let self else { return }
+            guard Defaults[.enableShortcuts], Defaults[.enableCsAIFeature] else { return }
+            openCsAITab(focusComposer: false)
+            CsAIManager.shared.sendClipboardContent(autoSend: true)
+        }
+
         KeyboardShortcuts.onKeyDown(for: .screenAssistantPanel) { [weak self] in
             guard let self else { return }
             guard Defaults[.enableShortcuts], Defaults[.enableScreenAssistant] else { return }
@@ -1528,7 +1555,31 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         updateShortcut(.colorPickerPanel, isEnabled: Defaults[.enableShortcuts] && Defaults[.enableColorPickerFeature])
         updateShortcut(.screenAssistantPanel, isEnabled: Defaults[.enableShortcuts] && Defaults[.enableScreenAssistant])
         updateShortcut(.toggleTerminalTab, isEnabled: Defaults[.enableShortcuts] && Defaults[.enableTerminalFeature])
+        updateShortcut(.toggleCsAITab, isEnabled: Defaults[.enableShortcuts] && Defaults[.enableCsAIFeature])
+        updateShortcut(.sendClipboardToCsAI, isEnabled: Defaults[.enableShortcuts] && Defaults[.enableCsAIFeature])
         updateShortcut(.toggleCaffeinate, isEnabled: Defaults[.enableShortcuts] && Defaults[.enableCaffeinate])
+    }
+
+    @MainActor
+    private func openCsAITab(focusComposer: Bool) {
+        if vm.notchState == .closed {
+            closeNotchWorkItem?.cancel()
+            closeNotchWorkItem = nil
+            vm.open()
+            coordinator.currentView = .csAI
+        } else if coordinator.currentView == .csAI {
+            coordinator.suppressHoverOpen()
+            vm.close()
+            return
+        } else {
+            closeNotchWorkItem?.cancel()
+            closeNotchWorkItem = nil
+            coordinator.currentView = .csAI
+        }
+
+        if focusComposer {
+            CsAIManager.shared.shouldFocusComposer = true
+        }
     }
 
     @MainActor

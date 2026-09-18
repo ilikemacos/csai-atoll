@@ -1,7 +1,7 @@
 <p align="center">
   <img src=".github/assets/atoll-logo.png" alt="Atoll logo" width="120">
 </p>
-<h1 align="center">Atoll - DynamicIsland for macOS</h1>
+<h1 align="center">csai-atoll — Atoll with cs.AI for macOS</h1>
 <p align="center">
 <a href="https://trendshift.io/repositories/15291" target="_blank"><img src="https://trendshift.io/api/badge/repositories/15291" alt="Ebullioscopic%2FAtoll | Trendshift" style="width: 250px; height: 55px;" width="250" height="55"/></a>
 </p>
@@ -36,7 +36,16 @@
   <a href="https://discord.gg/PaqFkRTDF8">Join our Discord community</a>
 </p>
 
+**csai-atoll** is a [GPL-3.0](LICENSE) fork of [Ebullioscopic/Atoll](https://github.com/Ebullioscopic/Atoll) that keeps Atoll’s look, feel, animations, notch behaviour, tabs, media, stats, timers, and gestures — and integrates **[cs.AI / ChopsticksAI](https://chopstickshq.com/chopsticks-ai/web/)** as a first-class island tab.
+
 Atoll turns the MacBook notch into a focused command surface for media, system insight, and quick utilities. It stays out of the way until needed, then expands with responsive, native SwiftUI animations.
+
+### cs.AI in the island
+- **cs.AI tab** in the expanded Dynamic Island with the same chrome, springs, and hover behaviour as other Atoll tabs.
+- **Streaming chat** against Chopsticks HQ (`https://chopstickshq.com/api/chopsticks-ai`) — no API key required for the free tier; optional Bearer key stored in Keychain.
+- **Plates:** Fast, Auto, **Flash** (default), Core — provider/vendor names are never shown in the UI.
+- **Shortcuts:** `Cmd+Shift+.` toggles the cs.AI tab; `Cmd+Shift+Option+C` sends clipboard text to cs.AI.
+- **Settings → cs.AI:** enable/disable, endpoint, default plate, API key.
 
 <p align="center">
   <img src="https://i.postimg.cc/t49mW5yN/Screenshot-2026-03-02-at-6-00-22-PM.png" alt="Atoll lock screen" width="920">
@@ -47,6 +56,7 @@ Atoll turns the MacBook notch into a focused command surface for media, system i
 
 
 ## Highlights
+- **cs.AI chat** built into the island (Chopsticks HQ, agent mode, streaming replies).
 - Media controls for Apple Music, Spotify, Cider, and more with inline previews.
 - Live Activities for media playback, Focus, screen recording, privacy indicators, downloads (beta), and battery/charging.
 - Lock screen widgets for media, timers, charging, Bluetooth devices, and weather.
@@ -76,7 +86,8 @@ Atoll turns the MacBook notch into a focused command surface for media, system i
 
 ## Quick Start
 - Hover near the notch to expand; click to enter controls.
-- Use tabs for Media, Stats, Timers, Clipboard, and more.
+- Use tabs for Media, Stats, Timers, **cs.AI**, Clipboard, and more.
+- Press **Cmd+Shift+.** to jump straight to the cs.AI tab.
 - Adjust layout, appearance, and shortcuts from Settings.
 - Add files to Shelf from Terminal: `open -a Atoll /path/to/file`.
 
@@ -96,10 +107,30 @@ Atoll turns the MacBook notch into a focused command surface for media, system i
 - If metrics are empty, enable categories in Settings → Stats.
 - Media not responding: verify player is active and Music permission is granted.
 
+## Build from source (macOS 14+)
+
+This fork cannot be compiled on Linux; build on a Mac with Xcode 15+:
+
+```bash
+git clone https://github.com/ilikemacos/csai-atoll.git
+cd csai-atoll
+open DynamicIsland.xcodeproj
+# Product → Run (⌘R), or:
+xcodebuild -project DynamicIsland.xcodeproj -scheme DynamicIsland -configuration Debug build
+```
+
+Requires a notched MacBook (14/16-inch) running **macOS 14.0 or later**.
+
 ## License
-Atoll is released under the GPL v3 License. Refer to [LICENSE](LICENSE) for the full terms.
+**csai-atoll** remains **GPL-3.0**. Refer to [LICENSE](LICENSE) for the full terms. This fork does not relicense upstream Atoll code.
 
 ## Acknowledgments
+
+### Upstream
+- [**Atoll**](https://github.com/Ebullioscopic/Atoll) by Ebullioscopic — the Dynamic Island for macOS this fork extends (GPL-3.0).
+
+### cs.AI
+- [**Chopsticks HQ / cs.AI**](https://chopstickshq.com) — public HQ API used by the island chat tab. API contract behaviour mirrors ChopsticksAI’s experimental island integration; UI and app code in this repo are Atoll-native and GPL-3.0.
 
 Atoll builds upon the work of several open-source projects and draws inspiration from innovative macOS applications:
 

@@ -60,6 +60,7 @@ private enum SettingsTab: String, CaseIterable, Identifiable {
     case stats
     case clipboard
     case screenAssistant
+    case csAI
     case colorPicker
     case downloads
     case shelf
@@ -77,7 +78,7 @@ private enum SettingsTab: String, CaseIterable, Identifiable {
         case .media, .liveActivities, .lockScreen, .devices:                 return .mediaAndDisplay
         case .hudAndOSD, .battery:                                           return .system
         case .timer, .calendar, .notes:                                      return .productivity
-        case .clipboard, .screenAssistant, .colorPicker, .shelf,
+        case .clipboard, .screenAssistant, .csAI, .colorPicker, .shelf,
              .downloads, .shortcuts:                                         return .utilities
         case .stats, .terminal:                                              return .developer
         case .extensions:                                                    return .integrations
@@ -101,6 +102,7 @@ private enum SettingsTab: String, CaseIterable, Identifiable {
         case .stats: return String(localized: "Stats")
         case .clipboard: return String(localized: "Clipboard")
         case .screenAssistant: return String(localized: "Screen Assistant")
+        case .csAI: return String(localized: "cs.AI")
         case .colorPicker: return String(localized: "Color Picker")
         case .downloads: return String(localized: "Downloads")
         case .shelf: return String(localized: "Shelf")
@@ -127,6 +129,7 @@ private enum SettingsTab: String, CaseIterable, Identifiable {
         case .stats: return "chart.xyaxis.line"
         case .clipboard: return "clipboard"
         case .screenAssistant: return "brain.head.profile"
+        case .csAI: return "sparkles"
         case .colorPicker: return "eyedropper"
         case .downloads: return "square.and.arrow.down"
         case .shelf: return "books.vertical"
@@ -153,6 +156,7 @@ private enum SettingsTab: String, CaseIterable, Identifiable {
         case .stats: return .teal
         case .clipboard: return .mint
         case .screenAssistant: return .pink
+        case .csAI: return Color(red: 0.95, green: 0.55, blue: 0.2)
         case .colorPicker: return .accentColor
         case .downloads: return .gray
         case .shelf: return .brown
@@ -459,6 +463,12 @@ private enum SettingsSearchIndex {
         // Screen Assistant
         SettingsSearchEntry(tab: .screenAssistant, title: "Enable Screen Assistant", keywords: ["screen assistant", "ai"], highlightID: SettingsTab.screenAssistant.highlightID(for: "Enable Screen Assistant")),
         SettingsSearchEntry(tab: .screenAssistant, title: "Display Mode", keywords: ["screen assistant", "mode"], highlightID: SettingsTab.screenAssistant.highlightID(for: "Display Mode")),
+
+        // cs.AI
+        SettingsSearchEntry(tab: .csAI, title: "Enable cs.AI", keywords: ["cs.ai", "chopsticks", "chat", "ai"], highlightID: SettingsTab.csAI.highlightID(for: "Enable cs.AI")),
+        SettingsSearchEntry(tab: .csAI, title: "Default plate", keywords: ["plate", "tier", "flash", "fast"], highlightID: SettingsTab.csAI.highlightID(for: "Default plate")),
+        SettingsSearchEntry(tab: .csAI, title: "Endpoint URL", keywords: ["endpoint", "chopstickshq", "api"], highlightID: SettingsTab.csAI.highlightID(for: "Endpoint URL")),
+        SettingsSearchEntry(tab: .csAI, title: "API key", keywords: ["api key", "bearer", "keychain"], highlightID: SettingsTab.csAI.highlightID(for: "API key")),
 
         // Color Picker
         SettingsSearchEntry(tab: .colorPicker, title: "Enable Color Picker", keywords: ["color picker", "eyedropper"], highlightID: SettingsTab.colorPicker.highlightID(for: "Enable Color Picker")),
@@ -813,6 +823,7 @@ struct SettingsView: View {
             // Utilities
             .clipboard,
             .screenAssistant,
+            .csAI,
             .colorPicker,
             .shelf,
             .downloads,
@@ -1012,7 +1023,7 @@ struct SettingsView: View {
 
     private func isTabVisible(_ tab: SettingsTab) -> Bool {
         switch tab {
-        case .timer, .stats, .clipboard, .screenAssistant, .colorPicker, .shelf, .notes, .terminal:
+        case .timer, .stats, .clipboard, .screenAssistant, .csAI, .colorPicker, .shelf, .notes, .terminal:
             return !enableMinimalisticUI
         default:
             return true
@@ -1077,6 +1088,10 @@ struct SettingsView: View {
         case .screenAssistant:
             SettingsForm(tab: .screenAssistant) {
                 ScreenAssistantSettings()
+            }
+        case .csAI:
+            SettingsForm(tab: .csAI) {
+                CsAISettings()
             }
         case .colorPicker:
             SettingsForm(tab: .colorPicker) {
@@ -7278,6 +7293,36 @@ struct Shortcuts: View {
                 Section {
                     HStack {
                         VStack(alignment: .leading) {
+                            KeyboardShortcuts.Recorder("Toggle cs.AI Tab:", name: .toggleCsAITab)
+                                .disabled(!enableShortcuts || !Defaults[.enableCsAIFeature])
+                            if !Defaults[.enableCsAIFeature] {
+                                Text("cs.AI feature is disabled")
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                                    .padding(.top, 2)
+                            }
+                        }
+                        Spacer()
+                    }
+                    HStack {
+                        VStack(alignment: .leading) {
+                            KeyboardShortcuts.Recorder("Send Clipboard to cs.AI:", name: .sendClipboardToCsAI)
+                                .disabled(!enableShortcuts || !Defaults[.enableCsAIFeature])
+                        }
+                        Spacer()
+                    }
+                } header: {
+                    Text("cs.AI")
+                } footer: {
+                    Text("Toggle cs.AI opens the chat tab (default Cmd+Shift+.). Send Clipboard opens cs.AI and submits the current clipboard text.")
+                        .multilineTextAlignment(.trailing)
+                        .foregroundStyle(.secondary)
+                        .font(.caption)
+                }
+
+                Section {
+                    HStack {
+                        VStack(alignment: .leading) {
                             KeyboardShortcuts.Recorder("Color Picker Panel:", name: .colorPickerPanel)
                                 .disabled(!enableShortcuts || !enableColorPickerFeature)
                             if !enableColorPickerFeature {
@@ -8822,6 +8867,162 @@ struct ScreenAssistantSettings: View {
         } else {
             let days = Int(interval / 86400)
             return "\(days)d ago"
+        }
+    }
+}
+
+struct CsAISettings: View {
+    @Default(.enableCsAIFeature) var enableCsAIFeature
+    @Default(.csAIEndpoint) var csAIEndpoint
+    @Default(.csAIDefaultPlate) var csAIDefaultPlate
+    @State private var apiKeyText = ""
+    @State private var showingApiKey = false
+    @State private var endpointDraft = ""
+    @State private var keychainError: String?
+
+    private func highlightID(_ title: String) -> String {
+        SettingsTab.csAI.highlightID(for: title)
+    }
+
+    var body: some View {
+        Form {
+            Section {
+                Defaults.Toggle(key: .enableCsAIFeature) {
+                    Text("Enable cs.AI")
+                }
+                .settingsHighlight(id: highlightID("Enable cs.AI"))
+            } header: {
+                Text("cs.AI")
+            } footer: {
+                Text("Adds a cs.AI chat tab to the Dynamic Island. Works without an API key via Chopsticks HQ; optional Bearer keys are stored in Keychain.")
+            }
+
+            if enableCsAIFeature {
+                Section {
+                    HStack {
+                        Text("Default plate")
+                        Spacer()
+                        Picker("", selection: $csAIDefaultPlate) {
+                            ForEach(CsAIPlate.allCases) { plate in
+                                Text(plate.displayName).tag(plate)
+                            }
+                        }
+                        .pickerStyle(.menu)
+                        .frame(minWidth: 120)
+                    }
+                    .settingsHighlight(id: highlightID("Default plate"))
+
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Endpoint URL")
+                        TextField("https://chopstickshq.com/api/chopsticks-ai", text: $endpointDraft)
+                            .textFieldStyle(.roundedBorder)
+                            .onSubmit { saveEndpoint() }
+                        HStack {
+                            Button("Reset to default") {
+                                csAIEndpoint = "https://chopstickshq.com/api/chopsticks-ai"
+                                endpointDraft = csAIEndpoint
+                            }
+                            .buttonStyle(.link)
+                            Spacer()
+                            Button("Save") { saveEndpoint() }
+                                .disabled(endpointDraft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                        }
+                    }
+                    .settingsHighlight(id: highlightID("Endpoint URL"))
+
+                    HStack {
+                        Text("API key")
+                        Spacer()
+                        if CsAIKeychain.hasKey {
+                            Text("Stored in Keychain")
+                                .foregroundColor(.green)
+                        } else {
+                            Text("Not set (HQ free tier)")
+                                .foregroundColor(.secondary)
+                        }
+                        Button(showingApiKey ? "Hide" : (CsAIKeychain.hasKey ? "Change" : "Set")) {
+                            if showingApiKey {
+                                showingApiKey = false
+                                apiKeyText = ""
+                            } else {
+                                showingApiKey = true
+                                apiKeyText = CsAIKeychain.read() ?? ""
+                            }
+                        }
+                    }
+                    .settingsHighlight(id: highlightID("API key"))
+
+                    if showingApiKey {
+                        VStack(alignment: .leading, spacing: 8) {
+                            SecureField("Optional Bearer API key", text: $apiKeyText)
+                                .textFieldStyle(.roundedBorder)
+                            HStack {
+                                Button("Remove key") {
+                                    do {
+                                        try CsAIKeychain.delete()
+                                        apiKeyText = ""
+                                        showingApiKey = false
+                                        keychainError = nil
+                                    } catch {
+                                        keychainError = error.localizedDescription
+                                    }
+                                }
+                                .disabled(!CsAIKeychain.hasKey)
+                                Spacer()
+                                Button("Save") {
+                                    saveAPIKey()
+                                }
+                                .disabled(apiKeyText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                            }
+                        }
+                    }
+
+                    if let keychainError {
+                        Text(keychainError)
+                            .font(.caption)
+                            .foregroundStyle(.red)
+                    }
+                } header: {
+                    Text("Configuration")
+                } footer: {
+                    Text("Plates: Fast, Auto, Flash (default), and Core. Provider names are never shown in the island UI.")
+                }
+
+                Section {
+                    Button("Clear cs.AI conversation") {
+                        CsAIManager.shared.clearConversation()
+                    }
+                    .foregroundColor(.red)
+                    .disabled(CsAIManager.shared.messages.isEmpty)
+                } header: {
+                    Text("Actions")
+                }
+            }
+        }
+        .onAppear {
+            endpointDraft = csAIEndpoint
+        }
+        .onChange(of: csAIEndpoint) { _, newValue in
+            endpointDraft = newValue
+        }
+    }
+
+    private func saveEndpoint() {
+        let trimmed = endpointDraft.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return }
+        csAIEndpoint = trimmed
+    }
+
+    private func saveAPIKey() {
+        let trimmed = apiKeyText.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return }
+        do {
+            try CsAIKeychain.save(trimmed)
+            showingApiKey = false
+            apiKeyText = ""
+            keychainError = nil
+        } catch {
+            keychainError = error.localizedDescription
         }
     }
 }

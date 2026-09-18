@@ -1297,6 +1297,11 @@ extension Defaults.Keys {
     static let showDiskGraph = Key<Bool>("showDiskGraph", default: false)
     static let cpuTemperatureUnit = Key<LockScreenWeatherTemperatureUnit>("cpuTemperatureUnit", default: .matchingSystemPreference)
     
+    // MARK: cs.AI Feature
+    static let enableCsAIFeature = Key<Bool>("enableCsAIFeature", default: true)
+    static let csAIEndpoint = Key<String>("csAIEndpoint", default: "https://chopstickshq.com/api/chopsticks-ai")
+    static let csAIDefaultPlate = Key<CsAIPlate>("csAIDefaultPlate", default: .flash)
+
     // MARK: Terminal Feature
     static let enableTerminalFeature = Key<Bool>("enableTerminalFeature", default: false)
     static let terminalShellPath = Key<String>("terminalShellPath", default: "/bin/zsh")

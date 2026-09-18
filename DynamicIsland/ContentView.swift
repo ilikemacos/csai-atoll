@@ -210,6 +210,10 @@ struct ContentView: View {
             return CGSize(width: baseSize.width, height: terminalHeight)
         }
 
+        if coordinator.currentView == .csAI {
+            return CGSize(width: baseSize.width, height: max(baseSize.height, 320))
+        }
+
         if coordinator.currentView == .extensionExperience {
             if let preferredHeight = extensionTabPreferredHeight(baseSize: baseSize) {
                 return CGSize(width: baseSize.width, height: preferredHeight)
@@ -1296,6 +1300,8 @@ struct ContentView: View {
                                   NotchStatsView()
                               case .llmUsage:
                                   NotchLLMUsageView()
+                              case .csAI:
+                                  NotchCsAIView()
                               case .colorPicker:
                                   NotchColorPickerView()
                             case .notes:

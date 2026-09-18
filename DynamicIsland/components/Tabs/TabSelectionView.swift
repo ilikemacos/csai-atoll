@@ -87,6 +87,10 @@ struct TabSelectionView: View {
             tabsArray.append(TabModel(label: "Usage", icon: "chart.bar.doc.horizontal", view: .llmUsage))
         }
 
+        if Defaults[.enableCsAIFeature] {
+            tabsArray.append(TabModel(label: "cs.AI", icon: "sparkles", view: .csAI))
+        }
+
         if Defaults[.enableNotes] || (Defaults[.enableClipboardManager] && Defaults[.clipboardDisplayMode] == .separateTab) {
             let label = Defaults[.enableNotes] ? "Notes" : "Clipboard"
             let icon = Defaults[.enableNotes] ? "note.text" : "doc.on.clipboard"
